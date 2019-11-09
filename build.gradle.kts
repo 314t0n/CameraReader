@@ -1,9 +1,12 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 group = "space.sentinel"
 version = "1.0-SNAPSHOT"
 
 plugins {
     application
     kotlin("jvm") version "1.3.40"
+    `maven-publish`
 }
 
 application {
@@ -39,6 +42,50 @@ repositories {
     jcenter()
 }
 
+publishing {
+    publications {
+        create<MavenPublication>("mavenJava"
+        ) {
+            artifactId = "CameraReader"
+            from(components["java"])
+            versionMapping {
+                usage("java-api") {
+                    fromResolutionOf("runtimeClasspath")
+                }
+                usage("java-runtime") {
+                    fromResolutionResult()
+                }
+            }
+            pom {
+                name.set("Camera Reader")
+                description.set("Reactive Camera reader")
+                url.set("https://github.com/314t0n/CameraReader")
+
+                licenses {
+                    license {
+                        name.set("The Apache License, Version 2.0")
+                        url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
+                    }
+                }
+                developers {
+                    developer {
+                        id.set("314t0n")
+                        name.set("Hajnal David")
+                    }
+                }
+            }
+        }
+    }
+    repositories {
+        maven {
+            val releasesRepoUrl = uri("$buildDir/repos/releases")
+            val snapshotsRepoUrl = uri("$buildDir/repos/snapshots")
+            url = if (version.toString().endsWith("SNAPSHOT")) snapshotsRepoUrl else releasesRepoUrl
+        }
+    }
+}
+
+
 val fatJar = task("fatJar", type = Jar::class) {
     manifest {
         attributes["Implementation-Title"] = "PIR Sensor Reader"
@@ -49,7 +96,9 @@ val fatJar = task("fatJar", type = Jar::class) {
     with(tasks["jar"] as CopySpec)
 }
 
-tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> { kotlinOptions.jvmTarget = "1.8" }
+tasks.withType<KotlinCompile> {
+    kotlinOptions.jvmTarget = "1.8"
+}
 
 tasks {
 
